@@ -19,17 +19,17 @@ class CControlVideo;
 //######################################
 class CVideoInputPin : public CRendererInputPin
 {
-    CVideoRenderer *m_pRenderer;        // The renderer that owns us
-    CCritSec *m_pInterfaceLock;         // Main filter critical section
+	CVideoRenderer *m_pRenderer;        // The renderer that owns us
+	CCritSec *m_pInterfaceLock;         // Main filter critical section
 
 public:
-    // Constructor
-    CVideoInputPin(
-        TCHAR *pObjectName,             // Object string description
-        CVideoRenderer *pRenderer,      // Used to delegate locking
-        CCritSec *pInterfaceLock,       // Main critical section
-        HRESULT *phr,                   // OLE failure return code
-        LPCWSTR pPinName);              // This pins identification
+	// Constructor
+	CVideoInputPin(
+		TCHAR *pObjectName,             // Object string description
+		CVideoRenderer *pRenderer,      // Used to delegate locking
+		CCritSec *pInterfaceLock,       // Main critical section
+		HRESULT *phr,                   // OLE failure return code
+		LPCWSTR pPinName);              // This pins identification
 };
 
 //######################################
@@ -43,22 +43,22 @@ class CVideoRenderer : public CBaseVideoRenderer
 {
 public:
 
-    // Constructor and destructor
-    static CUnknown * WINAPI CreateInstance(LPUNKNOWN, HRESULT *);
+	// Constructor and destructor
+	static CUnknown * WINAPI CreateInstance(LPUNKNOWN, HRESULT *);
 
-    CVideoRenderer(TCHAR *pName, LPUNKNOWN pUnk, HRESULT *phr);
-    ~CVideoRenderer();
+	CVideoRenderer(TCHAR *pName, LPUNKNOWN pUnk, HRESULT *phr);
+	~CVideoRenderer();
 
-    CBasePin *GetPin(int n);
+	CBasePin *GetPin(int n);
 
-    // Override these from the filter and renderer classes
-    HRESULT BreakConnect();
-    HRESULT CompleteConnect(IPin *pReceivePin);
-    HRESULT SetMediaType(const CMediaType *pmt);
+	// Override these from the filter and renderer classes
+	HRESULT BreakConnect();
+	HRESULT CompleteConnect(IPin *pReceivePin);
+	HRESULT SetMediaType(const CMediaType *pmt);
 	HRESULT DoRenderSample(IMediaSample *pMediaSample);
 	HRESULT CheckMediaType(const CMediaType *pmtIn);
 
 public:
-    CVideoInputPin  m_InputPin;        // IPin based interfaces
-    CMediaType      m_mtIn;            // Source connection media type
+	CVideoInputPin  m_InputPin;        // IPin based interfaces
+	CMediaType      m_mtIn;            // Source connection media type
 };

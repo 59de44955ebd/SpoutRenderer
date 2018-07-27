@@ -39,23 +39,23 @@ const AMOVIESETUP_MEDIATYPE sudPinTypes = {
 };
 
 const AMOVIESETUP_PIN sudPins = {
-    L"Input",                   // Name of the pin
-    FALSE,                      // Is pin rendered
-    FALSE,                      // Is an output pin
-    FALSE,                      // Ok for no pins
-    FALSE,                      // Allowed many
-    &CLSID_NULL,                // Connects to filter
-    L"Output",                  // Connects to pin
-    1,                          // Number of pin types
-    &sudPinTypes                // Details for pins
+	L"Input",                   // Name of the pin
+	FALSE,                      // Is pin rendered
+	FALSE,                      // Is an output pin
+	FALSE,                      // Ok for no pins
+	FALSE,                      // Allowed many
+	&CLSID_NULL,                // Connects to filter
+	L"Output",                  // Connects to pin
+	1,                          // Number of pin types
+	&sudPinTypes                // Details for pins
 };
 
 const AMOVIESETUP_FILTER sudSampVid = {
-    &CLSID_SpoutRenderer,      // Filter CLSID
-    L"SpoutRenderer",          // Filter name
-    MERIT_DO_NOT_USE,          // Filter merit
-    1,                         // Number pins
-    &sudPins                   // Pin details
+	&CLSID_SpoutRenderer,      // Filter CLSID
+	L"SpoutRenderer",          // Filter name
+	MERIT_DO_NOT_USE,          // Filter merit
+	1,                         // Number pins
+	&sudPins                   // Pin details
 };
 
 //######################################
@@ -75,11 +75,11 @@ void ErrorMessage (const char * msg) {
 // being created. The class factory will call the static CreateInstance
 //######################################
 CFactoryTemplate g_Templates[] = {
-    { L"SpoutRenderer"
-    , &CLSID_SpoutRenderer
-    , CVideoRenderer::CreateInstance
-    , NULL
-    , &sudSampVid }
+	{ L"SpoutRenderer"
+	, &CLSID_SpoutRenderer
+	, CVideoRenderer::CreateInstance
+	, NULL
+	, &sudSampVid }
 };
 int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);
 
@@ -89,7 +89,7 @@ int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);
 // This goes in the factory template table to create new filter instances
 //######################################
 CUnknown * WINAPI CVideoRenderer::CreateInstance (LPUNKNOWN pUnk, HRESULT *phr){
-    return new CVideoRenderer(NAME("SpoutRenderer"), pUnk, phr);
+	return new CVideoRenderer(NAME("SpoutRenderer"), pUnk, phr);
 }
 
 //######################################
@@ -277,7 +277,7 @@ DWORD WINAPI ThreadProc (void * data) {
 		++exitCode;
 		goto cleanup;
 	}
-	
+
 	//######################################
 	// TEST
 	//######################################
@@ -291,24 +291,24 @@ DWORD WINAPI ThreadProc (void * data) {
 	// Clean up
 	//######################################
 cleanup:
-	
+
 	// release and delete SpoutSender
 	if (g_spoutSender) {
 		g_spoutSender->ReleaseSender();
 		delete g_spoutSender;
 		g_spoutSender = NULL;
 	}
-	
+
 	// delete OpenGl context
 	if (glContext) {
 		wglDeleteContext(glContext);
 	}
-	
+
 	// Destroy dummy window used for OpenGL context creation
 	if (g_hwnd) {
 		DestroyWindow(g_hwnd);
 	}
-	
+
 	return exitCode;
 }
 
@@ -316,11 +316,11 @@ cleanup:
 // Constructor
 //######################################
 CVideoRenderer::CVideoRenderer (TCHAR *pName, LPUNKNOWN pUnk, HRESULT *phr) :
-    CBaseVideoRenderer(CLSID_SpoutRenderer, pName, pUnk, phr),
-    m_InputPin(NAME("Video Pin"),this, &m_InterfaceLock,phr, L"Input")
+	CBaseVideoRenderer(CLSID_SpoutRenderer, pName, pUnk, phr),
+	m_InputPin(NAME("Video Pin"),this, &m_InterfaceLock,phr, L"Input")
 {
-    // Store the video input pin
-    m_pInputPin = &m_InputPin;
+	// Store the video input pin
+	m_pInputPin = &m_InputPin;
 	g_thread = CreateThread(0, 0, ThreadProc, NULL, 0, 0);
 }
 
@@ -331,7 +331,7 @@ CVideoRenderer::~CVideoRenderer (){
 	SendMessage(g_hwnd, WM_DESTROY, 0, 0);
 	WaitForSingleObject(g_thread, INFINITE);
 	g_thread = NULL;
-    m_pInputPin = NULL;
+	m_pInputPin = NULL;
 }
 
  //######################################
@@ -376,7 +376,7 @@ HRESULT CVideoRenderer::CheckMediaType(const CMediaType *pmtIn){
 		NOTE("Invalid video biBitCount");
 		return E_INVALIDARG;
 	}
-	
+
 	return NOERROR;
 }
 
@@ -385,22 +385,22 @@ HRESULT CVideoRenderer::CheckMediaType(const CMediaType *pmtIn){
 // We only support one input pin and it is numbered zero
 //######################################
 CBasePin *CVideoRenderer::GetPin (int n){
-    ASSERT(n == 0);
-    if (n != 0) {
-        return NULL;
-    }
+	ASSERT(n == 0);
+	if (n != 0) {
+		return NULL;
+	}
 
-    // Assign the input pin if not already done so
-    if (m_pInputPin == NULL) {
-        m_pInputPin = &m_InputPin;
-    }
+	// Assign the input pin if not already done so
+	if (m_pInputPin == NULL) {
+		m_pInputPin = &m_InputPin;
+	}
 
-    return m_pInputPin;
+	return m_pInputPin;
 }
 
 //######################################
 // DoRenderSample
-// render the current image 
+// render the current image
 //######################################
 HRESULT CVideoRenderer::DoRenderSample (IMediaSample *pMediaSample) {
 
@@ -410,7 +410,7 @@ HRESULT CVideoRenderer::DoRenderSample (IMediaSample *pMediaSample) {
 	PBYTE pbData;
 	HRESULT hr = pMediaSample->GetPointer(&pbData);
 	if (FAILED(hr)) return hr;
-	
+
 	if (g_hwnd) {
 		mymutex.lock();
 		SendMessage(g_hwnd, WM_FRAMECHANGED, (WPARAM)pbData, 0);
@@ -431,12 +431,12 @@ HRESULT CVideoRenderer::DoRenderSample (IMediaSample *pMediaSample) {
 // only ever receive one sample at a time so it's safe to change immediately
 //######################################
 HRESULT CVideoRenderer::SetMediaType (const CMediaType *pmt){
-    CheckPointer(pmt, E_POINTER);
-    HRESULT hr = NOERROR;
-    CAutoLock cInterfaceLock(&m_InterfaceLock);
-    CMediaType StoreFormat(m_mtIn);
-    m_mtIn = *pmt;
-    return NOERROR;
+	CheckPointer(pmt, E_POINTER);
+	HRESULT hr = NOERROR;
+	CAutoLock cInterfaceLock(&m_InterfaceLock);
+	CMediaType StoreFormat(m_mtIn);
+	m_mtIn = *pmt;
+	return NOERROR;
 }
 
 //######################################
@@ -450,17 +450,17 @@ HRESULT CVideoRenderer::SetMediaType (const CMediaType *pmt){
 // then set our overall state back to disconnected ready for the next time
 //######################################
 HRESULT CVideoRenderer::BreakConnect (){
-    CAutoLock cInterfaceLock(&m_InterfaceLock);
+	CAutoLock cInterfaceLock(&m_InterfaceLock);
 
-    // Check we are in a valid state
-    HRESULT hr = CBaseVideoRenderer::BreakConnect();
-    if (FAILED(hr)) return hr;
+	// Check we are in a valid state
+	HRESULT hr = CBaseVideoRenderer::BreakConnect();
+	if (FAILED(hr)) return hr;
 
-    // The window is not used when disconnected
-    IPin *pPin = m_InputPin.GetConnected();
-    if (pPin) SendNotifyWindow(pPin,NULL);
+	// The window is not used when disconnected
+	IPin *pPin = m_InputPin.GetConnected();
+	if (pPin) SendNotifyWindow(pPin,NULL);
 
-    return NOERROR;
+	return NOERROR;
 }
 
 //######################################
@@ -474,18 +474,18 @@ HRESULT CVideoRenderer::BreakConnect (){
 //######################################
 HRESULT CVideoRenderer::CompleteConnect (IPin *pReceivePin){
 
-    CAutoLock cInterfaceLock(&m_InterfaceLock);
+	CAutoLock cInterfaceLock(&m_InterfaceLock);
 
-    CBaseVideoRenderer::CompleteConnect(pReceivePin);
+	CBaseVideoRenderer::CompleteConnect(pReceivePin);
 
-    // Has the video size changed between connections
-    VIDEOINFOHEADER *pVideoInfo = (VIDEOINFOHEADER *) m_mtIn.Format();
+	// Has the video size changed between connections
+	VIDEOINFOHEADER *pVideoInfo = (VIDEOINFOHEADER *) m_mtIn.Format();
 
-    if (pVideoInfo->bmiHeader.biWidth == g_videoSize.cx){
-        if (pVideoInfo->bmiHeader.biHeight == g_videoSize.cy){
-            return NOERROR;
-        }
-    }
+	if (pVideoInfo->bmiHeader.biWidth == g_videoSize.cx){
+		if (pVideoInfo->bmiHeader.biHeight == g_videoSize.cy){
+			return NOERROR;
+		}
+	}
 
 	mymutex.lock();
 
@@ -496,28 +496,28 @@ HRESULT CVideoRenderer::CompleteConnect (IPin *pReceivePin){
 
 	mymutex.unlock();
 
-    return NOERROR;
+	return NOERROR;
 }
 
 //######################################
 // Constructor
 //######################################
 CVideoInputPin::CVideoInputPin (TCHAR *pObjectName,
-                               CVideoRenderer *pRenderer,
-                               CCritSec *pInterfaceLock,
-                               HRESULT *phr,
-                               LPCWSTR pPinName) :
-    CRendererInputPin(pRenderer,phr,pPinName),
-    m_pRenderer(pRenderer),
-    m_pInterfaceLock(pInterfaceLock)
+							   CVideoRenderer *pRenderer,
+							   CCritSec *pInterfaceLock,
+							   HRESULT *phr,
+							   LPCWSTR pPinName) :
+	CRendererInputPin(pRenderer,phr,pPinName),
+	m_pRenderer(pRenderer),
+	m_pInterfaceLock(pInterfaceLock)
 {
-    ASSERT(m_pRenderer);
-    ASSERT(pInterfaceLock);
+	ASSERT(m_pRenderer);
+	ASSERT(pInterfaceLock);
 }
 
 ////////////////////////////////////////////////////////////////////////
 //
-// Exported entry points for registration and unregistration 
+// Exported entry points for registration and unregistration
 // (in this case they only call through to default implementations).
 //
 ////////////////////////////////////////////////////////////////////////
@@ -528,14 +528,14 @@ CVideoInputPin::CVideoInputPin (TCHAR *pObjectName,
 // Handle the registration of this filter
 //######################################
 STDAPI DllRegisterServer (){
-    return AMovieDllRegisterServer2( TRUE );
+	return AMovieDllRegisterServer2( TRUE );
 }
 
 //######################################
 // DllUnregisterServer
 //######################################
 STDAPI DllUnregisterServer (){
-    return AMovieDllRegisterServer2( FALSE );
+	return AMovieDllRegisterServer2( FALSE );
 }
 
 //######################################
