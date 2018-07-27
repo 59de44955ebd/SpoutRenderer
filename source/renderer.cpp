@@ -87,7 +87,7 @@ int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);
 // CreateInstance
 // This goes in the factory template table to create new filter instances
 //######################################
-CUnknown * WINAPI CVideoRenderer::CreateInstance (LPUNKNOWN pUnk, HRESULT *phr){
+CUnknown * WINAPI CVideoRenderer::CreateInstance (LPUNKNOWN pUnk, HRESULT *phr) {
 	return new CVideoRenderer(NAME("SpoutRenderer"), pUnk, phr);
 }
 
@@ -169,7 +169,7 @@ DWORD WINAPI ThreadProc (void * data) {
 	wc.hbrBackground = NULL;
 
 	if (!RegisterClassExA(&wc)) {
-		ErrorMessage("RegisterClassExW");
+		ErrorMessage("RegisterClassEx failed");
 		++exitCode;
 		goto cleanup;
 	}
@@ -316,7 +316,7 @@ cleanup:
 //######################################
 CVideoRenderer::CVideoRenderer (TCHAR *pName, LPUNKNOWN pUnk, HRESULT *phr) :
 	CBaseVideoRenderer(CLSID_SpoutRenderer, pName, pUnk, phr),
-	m_InputPin(NAME("Video Pin"), this, &m_InterfaceLock,phr, L"Input")
+	m_InputPin(NAME("Video Pin"), this, &m_InterfaceLock, phr, L"Input")
 {
 	// Store the video input pin
 	m_pInputPin = &m_InputPin;
@@ -326,7 +326,7 @@ CVideoRenderer::CVideoRenderer (TCHAR *pName, LPUNKNOWN pUnk, HRESULT *phr) :
 //######################################
 // Destructor
 //######################################
-CVideoRenderer::~CVideoRenderer (){
+CVideoRenderer::~CVideoRenderer () {
 	SendMessage(g_hwnd, WM_DESTROY, 0, 0);
 	WaitForSingleObject(g_thread, INFINITE);
 	g_thread = NULL;
@@ -337,7 +337,7 @@ CVideoRenderer::~CVideoRenderer (){
 // CheckMediaType
 // Check the proposed video media type
 //######################################
-HRESULT CVideoRenderer::CheckMediaType(const CMediaType *pmtIn){
+HRESULT CVideoRenderer::CheckMediaType(const CMediaType *pmtIn) {
 
 	// Does this have a VIDEOINFOHEADER format block
 	const GUID *pFormatType = pmtIn->FormatType();
@@ -370,7 +370,7 @@ HRESULT CVideoRenderer::CheckMediaType(const CMediaType *pmtIn){
 		return E_INVALIDARG;
 	}
 
-	// We only accept 24 and 32 bit
+	// We only accept 32 and 24 bit
 	if (pInput->bmiHeader.biBitCount!=32 && pInput->bmiHeader.biBitCount!=24) {
 		NOTE("Invalid video biBitCount");
 		return E_INVALIDARG;
@@ -383,7 +383,7 @@ HRESULT CVideoRenderer::CheckMediaType(const CMediaType *pmtIn){
 // GetPin
 // We only support one input pin and it is numbered zero
 //######################################
-CBasePin *CVideoRenderer::GetPin (int n){
+CBasePin *CVideoRenderer::GetPin (int n) {
 	ASSERT(n == 0);
 	if (n != 0) return NULL;
 
@@ -427,7 +427,7 @@ HRESULT CVideoRenderer::DoRenderSample (IMediaSample *pMediaSample) {
 // allocated a queue of samples. In our case this isn't a problem because we
 // only ever receive one sample at a time so it's safe to change immediately
 //######################################
-HRESULT CVideoRenderer::SetMediaType (const CMediaType *pmt){
+HRESULT CVideoRenderer::SetMediaType (const CMediaType *pmt) {
 	CheckPointer(pmt, E_POINTER);
 	HRESULT hr = NOERROR;
 	CAutoLock cInterfaceLock(&m_InterfaceLock);
@@ -446,7 +446,7 @@ HRESULT CVideoRenderer::SetMediaType (const CMediaType *pmt){
 // any palette we were using, reset anything set with the control interfaces
 // then set our overall state back to disconnected ready for the next time
 //######################################
-HRESULT CVideoRenderer::BreakConnect (){
+HRESULT CVideoRenderer::BreakConnect () {
 	CAutoLock cInterfaceLock(&m_InterfaceLock);
 
 	// Check we are in a valid state
@@ -469,7 +469,7 @@ HRESULT CVideoRenderer::BreakConnect (){
 // fullscreen mode do not cause unnecessary property changes. The basic ethos
 // is that all properties should be persistent across connections if possible
 //######################################
-HRESULT CVideoRenderer::CompleteConnect (IPin *pReceivePin){
+HRESULT CVideoRenderer::CompleteConnect (IPin *pReceivePin) {
 
 	CAutoLock cInterfaceLock(&m_InterfaceLock);
 
@@ -478,8 +478,8 @@ HRESULT CVideoRenderer::CompleteConnect (IPin *pReceivePin){
 	// Has the video size changed between connections
 	VIDEOINFOHEADER *pVideoInfo = (VIDEOINFOHEADER *) m_mtIn.Format();
 
-	if (pVideoInfo->bmiHeader.biWidth == g_videoSize.cx){
-		if (pVideoInfo->bmiHeader.biHeight == g_videoSize.cy){
+	if (pVideoInfo->bmiHeader.biWidth == g_videoSize.cx) {
+		if (pVideoInfo->bmiHeader.biHeight == g_videoSize.cy) {
 			return NOERROR;
 		}
 	}
@@ -520,14 +520,14 @@ CVideoInputPin::CVideoInputPin (TCHAR *pObjectName,
 //######################################
 // DllRegisterSever
 //######################################
-STDAPI DllRegisterServer (){
+STDAPI DllRegisterServer () {
 	return AMovieDllRegisterServer2(TRUE);
 }
 
 //######################################
 // DllUnregisterServer
 //######################################
-STDAPI DllUnregisterServer (){
+STDAPI DllUnregisterServer () {
 	return AMovieDllRegisterServer2(FALSE);
 }
 
@@ -535,7 +535,7 @@ STDAPI DllUnregisterServer (){
 // DllEntryPoint
 //######################################
 extern "C" BOOL WINAPI DllEntryPoint (HINSTANCE, ULONG, LPVOID);
-BOOL APIENTRY DllMain(HANDLE hModule, DWORD  dwReason, LPVOID lpReserved){
+BOOL APIENTRY DllMain(HANDLE hModule, DWORD  dwReason, LPVOID lpReserved) {
 	return DllEntryPoint((HINSTANCE)(hModule), dwReason, lpReserved);
 }
 
