@@ -85,7 +85,6 @@ int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);
 
 //######################################
 // CreateInstance
-//
 // This goes in the factory template table to create new filter instances
 //######################################
 CUnknown * WINAPI CVideoRenderer::CreateInstance (LPUNKNOWN pUnk, HRESULT *phr){
@@ -279,7 +278,7 @@ DWORD WINAPI ThreadProc (void * data) {
 	}
 
 	//######################################
-	// TEST
+	// Dispatch messages
 	//######################################
 	MSG messages;
 	while (GetMessage(&messages, NULL, 0, 0)) {
@@ -292,14 +291,14 @@ DWORD WINAPI ThreadProc (void * data) {
 	//######################################
 cleanup:
 
-	// release and delete SpoutSender
+	// Release and delete SpoutSender
 	if (g_spoutSender) {
 		g_spoutSender->ReleaseSender();
 		delete g_spoutSender;
 		g_spoutSender = NULL;
 	}
 
-	// delete OpenGl context
+	// Delete OpenGl context
 	if (glContext) {
 		wglDeleteContext(glContext);
 	}
@@ -371,7 +370,7 @@ HRESULT CVideoRenderer::CheckMediaType(const CMediaType *pmtIn){
 		return E_INVALIDARG;
 	}
 
-	// we only accept 24 and 32 bit
+	// We only accept 24 and 32 bit
 	if (pInput->bmiHeader.biBitCount!=32 && pInput->bmiHeader.biBitCount!=24) {
 		NOTE("Invalid video biBitCount");
 		return E_INVALIDARG;
@@ -386,9 +385,7 @@ HRESULT CVideoRenderer::CheckMediaType(const CMediaType *pmtIn){
 //######################################
 CBasePin *CVideoRenderer::GetPin (int n){
 	ASSERT(n == 0);
-	if (n != 0) {
-		return NULL;
-	}
+	if (n != 0) return NULL;
 
 	// Assign the input pin if not already done so
 	if (m_pInputPin == NULL) {
@@ -458,7 +455,7 @@ HRESULT CVideoRenderer::BreakConnect (){
 
 	// The window is not used when disconnected
 	IPin *pPin = m_InputPin.GetConnected();
-	if (pPin) SendNotifyWindow(pPin,NULL);
+	if (pPin) SendNotifyWindow(pPin, NULL);
 
 	return NOERROR;
 }
@@ -507,7 +504,7 @@ CVideoInputPin::CVideoInputPin (TCHAR *pObjectName,
 		CCritSec *pInterfaceLock,
 		HRESULT *phr,
 		LPCWSTR pPinName) :
-	CRendererInputPin(pRenderer,phr,pPinName),
+	CRendererInputPin(pRenderer, phr, pPinName),
 	m_pRenderer(pRenderer),
 	m_pInterfaceLock(pInterfaceLock)
 {
@@ -524,14 +521,14 @@ CVideoInputPin::CVideoInputPin (TCHAR *pObjectName,
 // DllRegisterSever
 //######################################
 STDAPI DllRegisterServer (){
-	return AMovieDllRegisterServer2( TRUE );
+	return AMovieDllRegisterServer2(TRUE);
 }
 
 //######################################
 // DllUnregisterServer
 //######################################
 STDAPI DllUnregisterServer (){
-	return AMovieDllRegisterServer2( FALSE );
+	return AMovieDllRegisterServer2(FALSE);
 }
 
 //######################################
