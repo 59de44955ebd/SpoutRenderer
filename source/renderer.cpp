@@ -93,7 +93,7 @@ CUnknown * WINAPI CVideoRenderer::CreateInstance (LPUNKNOWN pUnk, HRESULT *phr){
 }
 
 //######################################
-//TEST
+// The message handler for the hidden dummy window
 //######################################
 LRESULT CALLBACK DLLWindowProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	switch (message) {
@@ -317,7 +317,7 @@ cleanup:
 //######################################
 CVideoRenderer::CVideoRenderer (TCHAR *pName, LPUNKNOWN pUnk, HRESULT *phr) :
 	CBaseVideoRenderer(CLSID_SpoutRenderer, pName, pUnk, phr),
-	m_InputPin(NAME("Video Pin"),this, &m_InterfaceLock,phr, L"Input")
+	m_InputPin(NAME("Video Pin"), this, &m_InterfaceLock,phr, L"Input")
 {
 	// Store the video input pin
 	m_pInputPin = &m_InputPin;
@@ -491,7 +491,7 @@ HRESULT CVideoRenderer::CompleteConnect (IPin *pReceivePin){
 
 	g_videoSize.cx = pVideoInfo->bmiHeader.biWidth;
 	g_videoSize.cy = pVideoInfo->bmiHeader.biHeight;
-	g_videoDepth = pVideoInfo->bmiHeader.biBitCount / 8; // 3/4
+	g_videoDepth = pVideoInfo->bmiHeader.biBitCount / 8;
 	g_dataSize = g_videoSize.cx * g_videoSize.cy * g_videoDepth;
 
 	mymutex.unlock();
@@ -503,10 +503,10 @@ HRESULT CVideoRenderer::CompleteConnect (IPin *pReceivePin){
 // Constructor
 //######################################
 CVideoInputPin::CVideoInputPin (TCHAR *pObjectName,
-							   CVideoRenderer *pRenderer,
-							   CCritSec *pInterfaceLock,
-							   HRESULT *phr,
-							   LPCWSTR pPinName) :
+		CVideoRenderer *pRenderer,
+		CCritSec *pInterfaceLock,
+		HRESULT *phr,
+		LPCWSTR pPinName) :
 	CRendererInputPin(pRenderer,phr,pPinName),
 	m_pRenderer(pRenderer),
 	m_pInterfaceLock(pInterfaceLock)
@@ -516,16 +516,12 @@ CVideoInputPin::CVideoInputPin (TCHAR *pObjectName,
 }
 
 ////////////////////////////////////////////////////////////////////////
-//
 // Exported entry points for registration and unregistration
 // (in this case they only call through to default implementations).
-//
 ////////////////////////////////////////////////////////////////////////
 
 //######################################
 // DllRegisterSever
-//
-// Handle the registration of this filter
 //######################################
 STDAPI DllRegisterServer (){
 	return AMovieDllRegisterServer2( TRUE );
@@ -545,3 +541,4 @@ extern "C" BOOL WINAPI DllEntryPoint (HINSTANCE, ULONG, LPVOID);
 BOOL APIENTRY DllMain(HANDLE hModule, DWORD  dwReason, LPVOID lpReserved){
 	return DllEntryPoint((HINSTANCE)(hModule), dwReason, lpReserved);
 }
+
