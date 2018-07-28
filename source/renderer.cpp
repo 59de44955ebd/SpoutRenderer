@@ -1,6 +1,6 @@
 #include "renderer.h"
 #include <initguid.h>
-#include <mutex>
+//#include <mutex>
 
 //######################################
 // Defines
@@ -20,7 +20,8 @@ int g_videoDepth = 3;
 int g_dataSize = 320 * 240 * 3;
 GLuint g_texID;
 SpoutSender * g_spoutSender = NULL;
-std::mutex mymutex;
+
+//std::mutex mymutex;
 
 //######################################
 // GUIDs
@@ -50,7 +51,7 @@ const AMOVIESETUP_PIN sudPins = {
 	&sudPinTypes                // Details for pins
 };
 
-const AMOVIESETUP_FILTER sudSampVid = {
+const AMOVIESETUP_FILTER sudSpoutRenderer = {
 	&CLSID_SpoutRenderer,      // Filter CLSID
 	L"SpoutRenderer",          // Filter name
 	MERIT_DO_NOT_USE,          // Filter merit
@@ -79,7 +80,7 @@ CFactoryTemplate g_Templates[] = {
 	, &CLSID_SpoutRenderer
 	, CVideoRenderer::CreateInstance
 	, NULL
-	, &sudSampVid }
+	, &sudSpoutRenderer }
 };
 int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);
 
@@ -99,7 +100,6 @@ LRESULT CALLBACK DLLWindowProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM l
 
 	case WM_DESTROY:
 		PostQuitMessage(0);
-		return 0;
 		break;
 
 	//case WM_SIZECHANGED:
@@ -126,14 +126,14 @@ LRESULT CALLBACK DLLWindowProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM l
 				true
 			);
 		}
-		return 0;
 		break;
 
 	default:
 		return DefWindowProcW(hwnd, message, wParam, lParam);
-		break;
 
 	}
+
+	return 0;
 }
 
 //######################################
@@ -327,9 +327,12 @@ CVideoRenderer::CVideoRenderer (TCHAR *pName, LPUNKNOWN pUnk, HRESULT *phr) :
 // Destructor
 //######################################
 CVideoRenderer::~CVideoRenderer () {
-	SendMessage(g_hwnd, WM_DESTROY, 0, 0);
-	WaitForSingleObject(g_thread, INFINITE);
-	g_thread = NULL;
+	if (g_hwnd && g_thread) {
+		SendMessage(g_hwnd, WM_DESTROY, 0, 0);
+		WaitForSingleObject(g_thread, INFINITE);
+		g_thread = NULL;
+	}
+
 	m_pInputPin = NULL;
 }
 
@@ -337,42 +340,34 @@ CVideoRenderer::~CVideoRenderer () {
 // CheckMediaType
 // Check the proposed video media type
 //######################################
-HRESULT CVideoRenderer::CheckMediaType(const CMediaType *pmtIn) {
+HRESULT CVideoRenderer::CheckMediaType (const CMediaType *pMediaType) {
 
 	// Does this have a VIDEOINFOHEADER format block
-	const GUID *pFormatType = pmtIn->FormatType();
+	const GUID *pFormatType = pMediaType->FormatType();
 	if (*pFormatType != FORMAT_VideoInfo) {
 		NOTE("Format GUID not a VIDEOINFOHEADER");
 		return E_INVALIDARG;
 	}
-	ASSERT(pmtIn->Format());
+	ASSERT(pMediaType->Format());
 
 	// Check the format looks reasonably ok
-	ULONG Length = pmtIn->FormatLength();
+	ULONG Length = pMediaType->FormatLength();
 	if (Length < SIZE_VIDEOHEADER) {
 		NOTE("Format smaller than a VIDEOHEADER");
 		return E_FAIL;
 	}
 
-	VIDEOINFO *pInput = (VIDEOINFO *)pmtIn->Format();
-
-	// Check the major type is MEDIATYPE_Video
-	const GUID *pMajorType = pmtIn->Type();
+	// Check if the media major type is MEDIATYPE_Video
+	const GUID *pMajorType = pMediaType->Type();
 	if (*pMajorType != MEDIATYPE_Video) {
 		NOTE("Major type not MEDIATYPE_Video");
 		return E_INVALIDARG;
 	}
 
-	// Check we can identify the media subtype
-	const GUID *pSubType = pmtIn->Subtype();
-	if (GetBitCount(pSubType) == USHRT_MAX) {
+	// Check if the media subtype is either MEDIASUBTYPE_RGB32 or MEDIASUBTYPE_RGB24
+	const GUID *pSubType = pMediaType->Subtype();
+	if (*pSubType != MEDIASUBTYPE_RGB32 && *pSubType != MEDIASUBTYPE_RGB24) {
 		NOTE("Invalid video media subtype");
-		return E_INVALIDARG;
-	}
-
-	// We only accept 32 and 24 bit
-	if (pInput->bmiHeader.biBitCount!=32 && pInput->bmiHeader.biBitCount!=24) {
-		NOTE("Invalid video biBitCount");
 		return E_INVALIDARG;
 	}
 
@@ -397,21 +392,21 @@ CBasePin *CVideoRenderer::GetPin (int n) {
 
 //######################################
 // DoRenderSample
-// render the current image
+// Render the current image
 //######################################
 HRESULT CVideoRenderer::DoRenderSample (IMediaSample *pMediaSample) {
 
 	CheckPointer(pMediaSample, E_POINTER);
 	CAutoLock cInterfaceLock(&m_InterfaceLock);
 
-	PBYTE pbData;
-	HRESULT hr = pMediaSample->GetPointer(&pbData);
-	if (FAILED(hr)) return hr;
-
 	if (g_hwnd) {
-		mymutex.lock();
+		PBYTE pbData;
+		HRESULT hr = pMediaSample->GetPointer(&pbData);
+		if (FAILED(hr)) return hr;
+
+		//mymutex.lock();
 		SendMessage(g_hwnd, WM_FRAMECHANGED, (WPARAM)pbData, 0);
-		mymutex.unlock();
+		//mymutex.unlock();
 	}
 
 	return S_OK;
@@ -427,12 +422,12 @@ HRESULT CVideoRenderer::DoRenderSample (IMediaSample *pMediaSample) {
 // allocated a queue of samples. In our case this isn't a problem because we
 // only ever receive one sample at a time so it's safe to change immediately
 //######################################
-HRESULT CVideoRenderer::SetMediaType (const CMediaType *pmt) {
-	CheckPointer(pmt, E_POINTER);
+HRESULT CVideoRenderer::SetMediaType (const CMediaType *pMediaType) {
+	CheckPointer(pMediaType, E_POINTER);
 	HRESULT hr = NOERROR;
 	CAutoLock cInterfaceLock(&m_InterfaceLock);
 	CMediaType StoreFormat(m_mtIn);
-	m_mtIn = *pmt;
+	m_mtIn = *pMediaType;
 	return NOERROR;
 }
 
@@ -484,14 +479,14 @@ HRESULT CVideoRenderer::CompleteConnect (IPin *pReceivePin) {
 		}
 	}
 
-	mymutex.lock();
+	//mymutex.lock();
 
 	g_videoSize.cx = pVideoInfo->bmiHeader.biWidth;
 	g_videoSize.cy = pVideoInfo->bmiHeader.biHeight;
 	g_videoDepth = pVideoInfo->bmiHeader.biBitCount / 8;
 	g_dataSize = g_videoSize.cx * g_videoSize.cy * g_videoDepth;
 
-	mymutex.unlock();
+	//mymutex.unlock();
 
 	return NOERROR;
 }

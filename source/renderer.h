@@ -54,9 +54,9 @@ public:
 	// Override these from the filter and renderer classes
 	HRESULT BreakConnect();
 	HRESULT CompleteConnect(IPin *pReceivePin);
-	HRESULT SetMediaType(const CMediaType *pmt);
+	HRESULT SetMediaType(const CMediaType *pMediaType);
 	HRESULT DoRenderSample(IMediaSample *pMediaSample);
-	HRESULT CheckMediaType(const CMediaType *pmtIn);
+	HRESULT CheckMediaType(const CMediaType *pMediaType);
 
 public:
 	CVideoInputPin  m_InputPin;        // IPin based interfaces
